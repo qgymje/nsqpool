@@ -9,7 +9,7 @@ import (
 // PoolConn is a wrapper around net.Conn to modify the the behavior of
 // net.Conn's Close() method.
 type PoolConn struct {
-	Conn     *nsq.Producer
+	*nsq.Producer
 	mu       sync.RWMutex
 	c        *channelPool
 	unusable bool
@@ -21,13 +21,13 @@ func (p *PoolConn) Close() error {
 	defer p.mu.RUnlock()
 
 	if p.unusable {
-		if p.Conn != nil {
-			p.Conn.Stop()
+		if p.Producer != nil {
+			p.Producer.Stop()
 			return nil
 		}
 		return nil
 	}
-	return p.c.put(p.Conn)
+	return p.c.put(p.Producer)
 }
 
 // MarkUnusable marks the connection not usable any more, to let the pool close it instead of returning it to pool.
@@ -40,6 +40,6 @@ func (p *PoolConn) MarkUnusable() {
 // newConn wraps a standard net.Conn to a poolConn net.Conn.
 func (c *channelPool) wrapConn(conn *nsq.Producer) *PoolConn {
 	p := &PoolConn{c: c}
-	p.Conn = conn
+	p.Producer = conn
 	return p
 }

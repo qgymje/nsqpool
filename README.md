@@ -29,13 +29,14 @@ and use `pool` as the package name inside the code.
 // create a factory() to be used with channel based pool
 factory := func() (*nsq.Producer, error) { 
     config := nsq.NewConfig()
-    return nsq.NewProducer(":4160", config)
+    return nsq.NewProducer(":4150", config)
 }
 
 nsqPool, err := pool.NewChannelPool(5, 30, factory)
 
 producer, err := nsqPool.Get()
 
+producer.Publish("topic", "some data")
 // do something with producer and put it back to the pool by closing the connection
 // (this doesn't close the underlying connection instead it's putting it back
 // to the pool).
