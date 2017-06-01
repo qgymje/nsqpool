@@ -1,8 +1,7 @@
-# Pool [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/gopkg.in/fatih/pool.v2) [![Build Status](http://img.shields.io/travis/fatih/pool.svg?style=flat-square)](https://travis-ci.org/fatih/pool)
+# NSQPool
 
-
-Pool is a thread safe connection pool for net.Conn interface. It can be used to
-manage and reuse connections.
+NSQPool is a thread safe connection pool for nsq producer. It can be used to
+manage and reuse nsq producer connection.
 
 
 ## Install and Usage
@@ -10,13 +9,16 @@ manage and reuse connections.
 Install the package with:
 
 ```bash
-go get gopkg.in/fatih/pool.v2
+github.com/qgymje/nsqpool
 ```
 
 Import it with:
 
 ```go
-import "gopkg.in/fatih/pool.v2"
+import (
+    "github.com/qgymje/nsqpool"
+    nsq "github.com/nsqio/go-nsq"
+)
 ```
 
 and use `pool` as the package name inside the code.
@@ -25,34 +27,26 @@ and use `pool` as the package name inside the code.
 
 ```go
 // create a factory() to be used with channel based pool
-factory    := func() (net.Conn, error) { return net.Dial("tcp", "127.0.0.1:4000") }
+factory := func() (*nsq.Producer, error) { 
+    config := nsq.NewConfig()
+    return nsq.NewProducer(":4160", config)
+}
 
-// create a new channel based pool with an initial capacity of 5 and maximum
-// capacity of 30. The factory will create 5 initial connections and put it
-// into the pool.
-p, err := pool.NewChannelPool(5, 30, factory)
+nsqPool, err := pool.NewChannelPool(5, 30, factory)
 
-// now you can get a connection from the pool, if there is no connection
-// available it will create a new one via the factory function.
-conn, err := p.Get()
+producer, err := nsqPool.Get()
 
-// do something with conn and put it back to the pool by closing the connection
+// do something with producer and put it back to the pool by closing the connection
 // (this doesn't close the underlying connection instead it's putting it back
 // to the pool).
-conn.Close()
+producer.Close()
 
 // close pool any time you want, this closes all the connections inside a pool
-p.Close()
+nsqPool.Close()
 
 // currently available connections in the pool
-current := p.Len()
+current := nsqPool.Len()
 ```
-
-
-## Credits
-
- * [Fatih Arslan](https://github.com/fatih)
- * [sougou](https://github.com/sougou)
 
 ## License
 
